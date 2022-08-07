@@ -1,0 +1,48 @@
+Sub TasksToExcel()
+    Dim NumTsk%, NumCol%, RowsCount%, i%, j%, k%
+    Dim BookNam$, nm$
+    Dim t As Task
+    Dim s, OutRange(), TaskInfo, Heads
+        
+    Heads = Array("Project Name", "ID", "Task Name", "Res Names", "Sched Start", "Sched Finish", "Notes")
+    NumCol = UBound(Heads) + 1
+        
+    With CreateObject("Excel.Application")
+        .Workbooks.Add
+        BookNam = .ActiveWorkbook.Name
+        .Visible = False
+        .ScreenUpdating = False
+        .DisplayAlerts = False
+              
+        Set s = .Workbooks(BookNam).Worksheets(1)
+        s.Range("A1").Resize(1, NumCol) = Heads
+        RowsCount = 2
+        
+        For k = 1 To Application.Windows.Count
+            nm = Application.Windows(k).Caption
+            WindowActivate WindowName:=nm, TopPane:=True
+            SelectTaskColumn
+            NumTsk = ActiveSelection.Tasks.Count
+            ReDim OutRange(1 To NumTsk, 1 To NumCol)
+            i = 0
+   
+            For Each t In ActiveSelection.Tasks
+                If Not t Is Nothing Then
+                    i = i + 1
+                    TaskInfo = Array(nm, t.ID, t.Name, t.ResourceNames, t.ScheduledStart, t.ScheduledFinish, t.Notes)
+                    For j = 1 To NumCol
+                        OutRange(i, j) = TaskInfo(j - 1)
+                    Next
+                End If
+            Next t
+  
+            s.Cells(RowsCount, 1).Resize(NumTsk, NumCol) = OutRange
+            RowsCount = RowsCount + NumTsk
+        Next k
+        
+        MsgBox "Done!"
+        
+        .Visible = True
+        .ScreenUpdating = True
+    End With
+End Sub
